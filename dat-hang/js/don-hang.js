@@ -211,7 +211,7 @@ function drawOrder(groups,total){
 function openSend(){
  var groups=orderLines(),total=tot.A+tot.B+tot.C,pn=document.getElementById('qpn');
  if(!groups.length){toast('Chưa chọn sản phẩm nào để gửi');return}
- var text=orderText();pn.innerHTML='<h3 style="font-family:var(--sans)">Gửi đơn hàng</h3><div id="sdi" style="text-align:center;color:var(--muted);padding:20px 0">Đang tạo ảnh đơn…</div><div id="sdm" class="desc" style="margin:8px 0"></div><div class="acts" style="flex-wrap:wrap;gap:8px"><button class="btn pri" id="sdsv" type="button" style="flex:1 1 100%;min-height:52px" disabled>Lưu ảnh đơn hàng</button><button class="btn" id="sdcp" type="button" style="flex:1">Sao chép nội dung</button><button class="btn" id="sdok" type="button" style="flex:1 1 100%;min-height:48px">Xong · xóa giỏ, làm đơn mới</button><button class="btn" id="sdx" type="button" style="flex:1 1 100%">Quay lại chỉnh đơn</button></div>';
+ var text=orderText();pn.innerHTML='<h3 style="font-family:var(--sans)">Gửi đơn hàng</h3><div id="sdi" style="text-align:center;color:var(--muted);padding:20px 0">Đang tạo ảnh đơn…</div><div id="sdm" class="desc" style="margin:8px 0"></div><div class="acts" style="flex-wrap:wrap;gap:8px"><button class="btn pri" id="sdph" type="button" style="flex:1 1 100%;min-height:52px" disabled>Lưu vào Ảnh (điện thoại)</button><button class="btn" id="sdsv" type="button" style="flex:1 1 100%;min-height:44px" disabled>Tải file ảnh về máy</button><button class="btn" id="sdcp" type="button" style="flex:1">Sao chép nội dung</button><button class="btn" id="sdok" type="button" style="flex:1 1 100%;min-height:48px">Xong · xóa giỏ, làm đơn mới</button><button class="btn" id="sdx" type="button" style="flex:1 1 100%">Quay lại chỉnh đơn</button></div>';
  document.getElementById('qm').classList.add('on');Q=null;
  var cv=drawOrder(groups,total),blob=null,fname='don-hang-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.png';
  var box=document.getElementById('sdi'),msg=document.getElementById('sdm');
@@ -225,7 +225,11 @@ function openSend(){
   var id='o'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   await db.doc('orders/'+id).set({at:new Date().toISOString(),total:total,count:cnt.A+cnt.B+cnt.C,text:text,lines:groups.map(function(g){return{sec:g.t,sum:g.sum,rows:g.rows.map(function(r){return[r.code,r.qty,r.un,r.pcs,r.u,r.amt]})}})});
   saved=true;say('✓ Đơn đã được lưu cho Nghĩa. Bạn vẫn có thể gửi thêm ảnh qua Zalo.')}catch(e){say('Chưa lưu được đơn lên hệ thống — hãy gửi ảnh cho Nghĩa qua Zalo.')}})();
- cv.toBlob(function(b){blob=b;var im=new Image();im.src=URL.createObjectURL(b);im.alt='Ảnh đơn hàng';im.style.cssText=cv.style.cssText;if(cv.parentNode)cv.parentNode.replaceChild(im,cv);document.getElementById('sdsv').disabled=false;},'image/png');
+ cv.toBlob(function(b){blob=b;var im=new Image();im.src=URL.createObjectURL(b);im.alt='Ảnh đơn hàng';im.style.cssText=cv.style.cssText;if(cv.parentNode)cv.parentNode.replaceChild(im,cv);document.getElementById('sdsv').disabled=false;document.getElementById('sdph').disabled=false;},'image/png');
+ document.getElementById('sdph').onclick=async function(){
+  try{var f=new File([blob],fname,{type:'image/png'});
+   if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Đơn hàng Deli'});say('Trong bảng vừa hiện, chọn “Lưu hình ảnh” (iPhone) hoặc “Lưu vào Thư viện / Ảnh” (Android).');return}}catch(e){if(e&&e.name==='AbortError')return}
+  say('Máy này không mở được bảng chia sẻ. Ảnh sẽ hiện toàn màn hình: hãy giữ lâu lên ảnh rồi chọn “Lưu vào Ảnh” / “Tải ảnh”.');showImg(blob)};
  document.getElementById('sdsv').onclick=async function(){
   try{var d=window.claude&&await claude.use('downloads');if(d){await d.save({filename:fname,data:blob});say('Đã gửi yêu cầu lưu ảnh.');return}}catch(e){if(e&&e.code==='declined')return}
   try{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},500)}catch(e){}
