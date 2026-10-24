@@ -242,18 +242,23 @@ function openSend(){
   if(!ok&&navigator.clipboard){navigator.clipboard.writeText(text).then(function(){b.textContent='Đã sao chép'});return}b.textContent=ok?'Đã sao chép':'Hãy chọn thủ công'};
  document.getElementById('sdx').onclick=closeQ;
   document.getElementById('sdok').onclick=function(){var b=this;if(!b.dataset.s){b.dataset.s=1;b.textContent='Bấm lại để xác nhận xóa giỏ (hãy chắc đã gửi đơn)';return}resetOrder();closeQ();toast('Đã xóa giỏ, bắt đầu đơn mới')}}
-function showImg(blob){var o=document.getElementById('imgv');if(!o){o=document.createElement('div');o.id='imgv';o.style.cssText='position:fixed;inset:0;z-index:1300;background:#0b0d14;overflow:auto;-webkit-overflow-scrolling:touch';document.body.appendChild(o)}
- o.innerHTML='<div style="position:sticky;top:0;z-index:2;background:#d61e28;color:#fff;padding:12px 16px;font:600 15px/1.35 system-ui,sans-serif">GIỮ LÂU lên ảnh bên dưới rồi chọn “Tải hình ảnh / Lưu ảnh” (máy tính: bấm chuột phải → Lưu ảnh thành…)<button id="imgvx" style="float:right;margin-left:10px;background:#fff;color:#d61e28;border:0;border-radius:8px;padding:6px 12px;font-weight:700">Đóng</button></div><img alt="Ảnh đơn hàng" style="display:block;width:100%;max-width:900px;margin:0 auto;background:#fff"/>';
- o.querySelector('img').src=URL.createObjectURL(blob);o.style.display='block';o.scrollTop=0;document.getElementById('imgvx').onclick=function(){o.style.display='none'}}
+function dataToBlob(u){var p=u.split(','),m=/:(.*?);/.exec(p[0])[1],bin=atob(p[1]),n=bin.length,a=new Uint8Array(n);while(n--)a[n]=bin.charCodeAt(n);return new Blob([a],{type:m})}
 function downloadOrder(){
  var groups=orderLines(),total=tot.A+tot.B+tot.C;
  if(!groups.length){toast('Chưa chọn sản phẩm nào');return}
  var cv=drawOrder(groups,total),fname='don-hang-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.png';
- cv.toBlob(function(b){
-  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},800);
-  toast('Đã tải ảnh đơn hàng về máy');
-  if(window.CONFIG&&CONFIG.FORM_URL){fetch(CONFIG.FORM_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subject:'Đơn hàng Deli '+new Date().toLocaleDateString('vi-VN')+' · '+vn(total)+'đ',message:orderText(),total:total})}).catch(function(){})}
- },'image/png')}
+ var url=cv.toDataURL('image/png'),blob=dataToBlob(url);
+ try{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},1500)}catch(e){}
+ if(window.CONFIG&&CONFIG.FORM_URL){fetch(CONFIG.FORM_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subject:'Đơn hàng Deli '+new Date().toLocaleDateString('vi-VN')+' · '+vn(total)+'đ',message:orderText(),total:total})}).catch(function(){})}
+ showImg(blob,fname)}
+function showImg(blob,fname){var o=document.getElementById('imgv');if(!o){o=document.createElement('div');o.id='imgv';o.style.cssText='position:fixed;inset:0;z-index:1300;background:#0b0d14;overflow:auto;-webkit-overflow-scrolling:touch';document.body.appendChild(o)}
+ o.innerHTML='<div style="position:sticky;top:0;z-index:2;background:#d61e28;color:#fff;padding:12px 16px;font:600 15px/1.4 system-ui,sans-serif">Ảnh đơn hàng đã được tải về máy (mục Tải xuống). Nếu chưa thấy: <b>giữ lâu lên ảnh</b> rồi chọn “Lưu ảnh / Tải ảnh”, hoặc bấm nút bên dưới.<div style="margin-top:10px;display:flex;gap:8px"><button id="imgvs" style="flex:1;background:#fff;color:#d61e28;border:0;border-radius:8px;padding:10px;font-weight:700">Lưu vào Ảnh / Chia sẻ</button><button id="imgvx" style="background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700">Đóng</button></div></div><img alt="Ảnh đơn hàng" style="display:block;width:100%;max-width:900px;margin:0 auto;background:#fff"/>';
+ o.querySelector('img').src=URL.createObjectURL(blob);o.style.display='block';o.scrollTop=0;
+ document.getElementById('imgvx').onclick=function(){o.style.display='none'};
+ document.getElementById('imgvs').onclick=function(){var f=new File([blob],fname||'don-hang.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'Đơn hàng Deli'}).catch(function(){})}
+  else{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},1500)}}}
+
 function resetOrder(){ROWS={};CART=[];S={};try{localStorage.removeItem(KEY)}catch(e){}build();recalc();buildOverlays();refreshBtns();tab('o');window.scrollTo(0,0)}
 build();recalc();buildOverlays();refreshBtns();
 })();
