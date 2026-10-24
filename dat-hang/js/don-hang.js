@@ -50,7 +50,7 @@ function build(){
  if(!CART.length)h+='<div class="empty"><span>Chưa có sản phẩm nào.</span><button class="btn" id="gocat">Xem danh mục sản phẩm</button></div>';
  else{h+='<div class="scroll"><table>'+HEAD+'<tbody>';CART.forEach(function(c){h+=row(cartItem(c),'C',true,'')});h+='</tbody></table></div>'}
  h+='</section>';
- h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Gửi đơn hàng</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Chỉ sao chép nội dung đơn</button></div>';
+ h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Tải ảnh đơn hàng về máy</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Sao chép nội dung đơn</button><button class="btn" id="breset" style="width:100%;min-height:44px;margin-top:8px">Xóa giỏ, làm đơn mới</button></div>';
  h+='<div class="foot-note"><span>Thành tiền = số lượng × cái/hộp × đơn giá khách B. Sửa số lượng, tích hoặc bỏ tích từng dòng thì tổng đơn tự cập nhật.</span><span>Dấu * là số cái/hộp ước tính vì chưa có quy cách trong file CTKM, cần xác nhận lại. Dòng "Vượt tồn" là số lượng đặt lớn hơn tồn HCM.</span></div>';
  document.getElementById('app').innerHTML=h;
 }
@@ -83,7 +83,8 @@ app.addEventListener('input',function(ev){var tr=ev.target.closest('tr[data-k]')
 app.addEventListener('click',function(ev){var t=ev.target;
  if(t.id==='gocat'){tab('c');return}
  if(t.id==='bcopy'){openCopy();return}
- if(t.id==='bsend'){openSend();return}
+ if(t.id==='bsend'){downloadOrder();return}
+ if(t.id==='breset'){if(!t.dataset.s){t.dataset.s=1;t.textContent='Bấm lại để xác nhận xóa giỏ (hãy chắc đã tải ảnh đơn)';setTimeout(function(){delete t.dataset.s;t.textContent='Xóa giỏ, làm đơn mới'},6000);return}resetOrder();toast('Đã xóa giỏ, bắt đầu đơn mới');return}
  var rm=t.closest&&t.closest('[data-rm]');
  if(rm){var code=rm.getAttribute('data-rm');CART=CART.filter(function(c){return c.code!==code});delete ROWS['C:'+code];build();recalc();return}
  if(t.tagName==='IMG'&&t.classList.contains('zoomable')){var z=document.getElementById('zb');document.getElementById('zbi').src=t.src;document.getElementById('zbi').alt=t.alt;document.getElementById('zbc').textContent=t.alt;z.classList.add('on')}});
@@ -242,6 +243,15 @@ function openSend(){
 function showImg(blob){var o=document.getElementById('imgv');if(!o){o=document.createElement('div');o.id='imgv';o.style.cssText='position:fixed;inset:0;z-index:1300;background:#0b0d14;overflow:auto;-webkit-overflow-scrolling:touch';document.body.appendChild(o)}
  o.innerHTML='<div style="position:sticky;top:0;z-index:2;background:#d61e28;color:#fff;padding:12px 16px;font:600 15px/1.35 system-ui,sans-serif">GIỮ LÂU lên ảnh bên dưới rồi chọn “Tải hình ảnh / Lưu ảnh” (máy tính: bấm chuột phải → Lưu ảnh thành…)<button id="imgvx" style="float:right;margin-left:10px;background:#fff;color:#d61e28;border:0;border-radius:8px;padding:6px 12px;font-weight:700">Đóng</button></div><img alt="Ảnh đơn hàng" style="display:block;width:100%;max-width:900px;margin:0 auto;background:#fff"/>';
  o.querySelector('img').src=URL.createObjectURL(blob);o.style.display='block';o.scrollTop=0;document.getElementById('imgvx').onclick=function(){o.style.display='none'}}
+function downloadOrder(){
+ var groups=orderLines(),total=tot.A+tot.B+tot.C;
+ if(!groups.length){toast('Chưa chọn sản phẩm nào');return}
+ var cv=drawOrder(groups,total),fname='don-hang-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.png';
+ cv.toBlob(function(b){
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},800);
+  toast('Đã tải ảnh đơn hàng về máy');
+  if(window.CONFIG&&CONFIG.FORM_URL){fetch(CONFIG.FORM_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subject:'Đơn hàng Deli '+new Date().toLocaleDateString('vi-VN')+' · '+vn(total)+'đ',message:orderText(),total:total})}).catch(function(){})}
+ },'image/png')}
 function resetOrder(){ROWS={};CART=[];S={};try{localStorage.removeItem(KEY)}catch(e){}build();recalc();buildOverlays();refreshBtns();tab('o');window.scrollTo(0,0)}
 build();recalc();buildOverlays();refreshBtns();
 })();
