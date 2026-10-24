@@ -53,6 +53,8 @@ function build(){
  h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Tải ảnh đơn hàng về máy</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Sao chép nội dung đơn</button><button class="btn" id="breset" style="width:100%;min-height:44px;margin-top:8px">Xóa giỏ, làm đơn mới</button></div>';
  h+='<div class="foot-note"><span>Thành tiền = số lượng × cái/hộp × đơn giá khách B. Sửa số lượng, tích hoặc bỏ tích từng dòng thì tổng đơn tự cập nhật.</span><span>Dấu * là số cái/hộp ước tính vì chưa có quy cách trong file CTKM, cần xác nhận lại. Dòng "Vượt tồn" là số lượng đặt lớn hơn tồn HCM.</span></div>';
  document.getElementById('app').innerHTML=h;
+ if(!DATA.own.length&&!DATA.old.length){var sa=document.querySelector('.sA');if(sa)sa.hidden=true}
+ if(!DATA.adv.length){var sb2=document.querySelector('.sB');if(sb2)sb2.hidden=true}
 }
 var tot={A:0,B:0,C:0},cnt={A:0,B:0,C:0};
 function recalc(){
