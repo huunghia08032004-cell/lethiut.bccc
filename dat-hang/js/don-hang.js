@@ -242,6 +242,18 @@ function openSend(){
   if(!ok&&navigator.clipboard){navigator.clipboard.writeText(text).then(function(){b.textContent='Đã sao chép'});return}b.textContent=ok?'Đã sao chép':'Hãy chọn thủ công'};
  document.getElementById('sdx').onclick=closeQ;
   document.getElementById('sdok').onclick=function(){var b=this;if(!b.dataset.s){b.dataset.s=1;b.textContent='Bấm lại để xác nhận xóa giỏ (hãy chắc đã gửi đơn)';return}resetOrder();closeQ();toast('Đã xóa giỏ, bắt đầu đơn mới')}}
+var IN_APP=/Zalo|FBAN|FBAV|Messenger|Instagram|Line\//i.test(navigator.userAgent),IS_AND=/Android/i.test(navigator.userAgent),IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+function openExternal(){var u=location.href;
+ if(IS_AND){location.href='intent://'+u.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(u)+';end';return}
+ copyLink()}
+function copyLink(){var u=location.href,ok=false;try{var ta=document.createElement('textarea');ta.value=u;document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(e){}
+ if(!ok&&navigator.clipboard)navigator.clipboard.writeText(u);toast('Đã sao chép link. Dán vào Chrome/Safari để mở.')}
+function inAppBanner(){if(!IN_APP||document.getElementById('inappb'))return;var d=document.createElement('div');d.id='inappb';
+ d.style.cssText='background:#fff3cd;color:#5c4400;border-bottom:1px solid #f0d98a;padding:10px 14px;font:500 14px/1.45 system-ui,sans-serif';
+ d.innerHTML='Bạn đang mở trong ứng dụng (Zalo/Facebook) nên có thể <b>không tải được ảnh</b>. Hãy mở bằng trình duyệt: bấm dấu <b>⋯</b> góc phải → <b>“Mở bằng trình duyệt”</b>. <button id="inappo" style="margin-top:6px;background:#d61e28;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:700">'+(IS_AND?'Mở bằng Chrome':'Sao chép link')+'</button> <button id="inappc" style="margin-top:6px;background:#fff;border:1px solid #d6b84a;border-radius:8px;padding:8px 12px;font-weight:700">Sao chép link</button>';
+ document.body.insertBefore(d,document.body.firstChild);document.getElementById('inappo').onclick=openExternal;document.getElementById('inappc').onclick=copyLink}
+inAppBanner();
+
 function dataToBlob(u){var p=u.split(','),m=/:(.*?);/.exec(p[0])[1],bin=atob(p[1]),n=bin.length,a=new Uint8Array(n);while(n--)a[n]=bin.charCodeAt(n);return new Blob([a],{type:m})}
 function downloadOrder(){
  var groups=orderLines(),total=tot.A+tot.B+tot.C;
@@ -252,7 +264,7 @@ function downloadOrder(){
  if(window.CONFIG&&CONFIG.FORM_URL){fetch(CONFIG.FORM_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subject:'Đơn hàng Deli '+new Date().toLocaleDateString('vi-VN')+' · '+vn(total)+'đ',message:orderText(),total:total})}).catch(function(){})}
  showImg(blob,fname)}
 function showImg(blob,fname){var o=document.getElementById('imgv');if(!o){o=document.createElement('div');o.id='imgv';o.style.cssText='position:fixed;inset:0;z-index:1300;background:#0b0d14;overflow:auto;-webkit-overflow-scrolling:touch';document.body.appendChild(o)}
- o.innerHTML='<div style="position:sticky;top:0;z-index:2;background:#d61e28;color:#fff;padding:12px 16px;font:600 15px/1.4 system-ui,sans-serif">Ảnh đơn hàng đã được tải về máy (mục Tải xuống). Nếu chưa thấy: <b>giữ lâu lên ảnh</b> rồi chọn “Lưu ảnh / Tải ảnh”, hoặc bấm nút bên dưới.<div style="margin-top:10px;display:flex;gap:8px"><button id="imgvs" style="flex:1;background:#fff;color:#d61e28;border:0;border-radius:8px;padding:10px;font-weight:700">Lưu vào Ảnh / Chia sẻ</button><button id="imgvx" style="background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700">Đóng</button></div></div><img alt="Ảnh đơn hàng" style="display:block;width:100%;max-width:900px;margin:0 auto;background:#fff"/>';
+ o.innerHTML='<div style="position:sticky;top:0;z-index:2;background:#d61e28;color:#fff;padding:12px 16px;font:600 15px/1.4 system-ui,sans-serif">'+(IN_APP?'Zalo không cho tải file. <b>Giữ lâu lên ảnh</b> bên dưới rồi chọn “Lưu ảnh”, hoặc mở link bằng trình duyệt (Chrome/Safari) để tải.':'Ảnh đơn hàng đã được tải về máy (mục Tải xuống). Nếu chưa thấy: <b>giữ lâu lên ảnh</b> rồi chọn “Lưu ảnh / Tải ảnh”, hoặc bấm nút bên dưới.')+'<div style="margin-top:10px;display:flex;gap:8px"><button id="imgvs" style="flex:1;background:#fff;color:#d61e28;border:0;border-radius:8px;padding:10px;font-weight:700">Lưu vào Ảnh / Chia sẻ</button><button id="imgvx" style="background:rgba(255,255,255,.2);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700">Đóng</button></div></div><img alt="Ảnh đơn hàng" style="display:block;width:100%;max-width:900px;margin:0 auto;background:#fff"/>';
  o.querySelector('img').src=URL.createObjectURL(blob);o.style.display='block';o.scrollTop=0;
  document.getElementById('imgvx').onclick=function(){o.style.display='none'};
  document.getElementById('imgvs').onclick=function(){var f=new File([blob],fname||'don-hang.png',{type:'image/png'});
