@@ -14,7 +14,7 @@ function cropStyle(c){var p=c[0],x0=c[1],y0=c[2],H=PH[p]||2140;
 function thumb(e){
  if(e.card!=null)return '<div class="th" style="'+cropStyle(CL[e.card])+'"></div>';
  return '<div class="th">'+(e.img?'<img class="zoomable" src="'+e.img+'" alt="'+esc(e.code)+'" loading="lazy">':'Chưa có ảnh')+'</div>'}
-function stH(e){if(e.stock==null)return '<span class="st no" data-st>Hỏi lại sales</span>';if(e.stock>0)return '<span class="st" data-st>Còn '+vn(e.stock)+'</span>';return '<span class="st no" data-st>Hết hàng</span>'}
+function stH(e){if(e.stock==null)return '<span class="st no" data-st>Hỏi lại sales</span>';if(e.stock>0)return '<span class="st" data-st>Còn '+vn(e.stock)+'</span>';return '<span class="st no" data-st>Hỏi lại sales</span>'}
 function priceH(e){var p=unit(e);if(p==null)return '<span class="desc">Chưa có giá</span>';
  var h='<span class="big">'+vn(p)+'đ</span>';
  if(e.fixed)h+='<span class="km">Giá chung</span><s>'+vn(e.list)+'đ</s>';else if(e.km>0)h+='<span class="km">KM −'+Math.round(e.km*100)+'%</span><s>'+vn(e.list)+'đ</s>';
@@ -66,7 +66,7 @@ function recalc(){
   tr.querySelector('.amt').textContent=u==null?'—':vn(amt)+'đ';
   var st=tr.querySelector('[data-st]');
   if(e.stock!=null&&pcs>e.stock&&r.on){st.className='st warn';st.textContent='Vượt tồn ('+vn(e.stock)+')'}
-  else{st.className='st'+((e.stock==null||e.stock<=0)?' no':'');st.textContent=e.stock==null?'Hỏi lại sales':(e.stock>0?'Còn '+vn(e.stock):'Hết hàng')}
+  else{st.className='st'+((e.stock==null||e.stock<=0)?' no':'');st.textContent=e.stock==null?'Hỏi lại sales':(e.stock>0?'Còn '+vn(e.stock):'Hỏi lại sales')}
   if(r.on&&r.qty>0){tot[s.sec]+=amt;cnt[s.sec]++}
  });
  var g=tot.A+tot.B+tot.C,n=cnt.A+cnt.B+cnt.C;
@@ -138,8 +138,8 @@ function renderQ(qty,first){
  else if(inf.kind==='box')rule='<div class="rule w"><span>Quy cách ước tính: <b>1 hộp ≈ '+inf.per+' cái</b></span><span>Nghĩa sẽ xác nhận lại. Đặt tối thiểu 1 hộp.</span></div>';
  else if(inf.kind==='set')rule='<div class="rule"><span>Sản phẩm <b>đóng sẵn nguyên hộp</b>.</span><span>Đặt tối thiểu <b>1 hộp</b>.</span></div>';
  else rule='<div class="rule w"><span>Chưa có quy cách hộp cho mã này.</span><span>Đặt tối thiểu <b>1 cái</b>, Nghĩa sẽ xác nhận lại quy cách.</span></div>';
- var stt=inf.stock==null?'<span class="st no">Hỏi lại sales</span>':(inf.stock>0?'<span class="st">Còn '+vn(inf.stock)+' cái</span>':'<span class="st no">Hết hàng</span>');
- if(inf.stock===0)rule+='<div class="rule w" style="margin-top:6px"><span><b>Hết hàng tại kho HCM.</b></span><span>Vẫn thêm được, sẽ ghi chú là đặt trước, chờ hàng về.</span></div>';
+ var stt=(inf.stock==null||inf.stock<=0)?'<span class="st no">Hỏi lại sales</span>':'<span class="st">Còn '+vn(inf.stock)+' cái</span>';
+ if(inf.stock===0)rule+='<div class="rule w" style="margin-top:6px"><span><b>Hỏi lại sales về tồn kho.</b></span><span>Vẫn thêm được, Nghĩa sẽ xác nhận hàng khi chốt đơn.</span></div>';
  var h='<div class="pv" style="'+cropStyle(c)+'"></div>';
  h+='<div class="row">'+(codes.length>1?'<select id="qsel" aria-label="Chọn mã">'+codes.map(function(k){return '<option value="'+esc(k)+'"'+(k===Q.code?' selected':'')+'>'+esc(k)+'</option>'}).join('')+'</select>':'<h3>'+esc(Q.code)+'</h3>')+stt+'</div>';
  h+='<div class="row"><span>Đơn giá khách B</span><b style="color:var(--red);font-size:18px">'+vn(c[4])+'đ / cái</b></div>';
@@ -152,8 +152,7 @@ function renderQ(qty,first){
  function upd(){var n=Math.max(1,parseInt(inp.value)||1);var pcs=n*inf.per;
   document.getElementById('qcalc').innerHTML=pcs+' cái × '+vn(c[4])+'đ<b>'+vn(pcs*c[4])+'đ</b>';
   var w=document.getElementById('qwarn'),ok=document.getElementById('qok');
-  if(inf.stock===0){w.hidden=false;w.textContent='Mã này đang hết hàng tại HCM, chưa thể thêm vào đơn.';ok.disabled=true}
-  else if(inf.stock!=null&&pcs>inf.stock){w.hidden=false;w.textContent='Số lượng vượt tồn HCM (còn '+vn(inf.stock)+' cái). Nghĩa sẽ xác nhận lại khi chốt đơn.';ok.disabled=false}
+  if(inf.stock!=null&&pcs>inf.stock){w.hidden=false;w.textContent='Số lượng vượt tồn HCM (còn '+vn(inf.stock)+' cái). Nghĩa sẽ xác nhận lại khi chốt đơn.';ok.disabled=false}
   else{w.hidden=true;ok.disabled=false}}
  inp.oninput=upd;upd();
  document.getElementById('qm1').onclick=function(){inp.value=Math.max(1,(parseInt(inp.value)||1)-1);upd()};
@@ -178,7 +177,7 @@ function addCart(n){
 function orderText(){
  var L=['ĐƠN HÀNG DELI · giá khách B · '+new Date().toLocaleDateString('vi-VN'),''];
  [['A','A. Khách đặt'],['B','B. Gợi ý thêm đã chọn'],['C','C. Khách chọn thêm']].forEach(function(p){
-  var rows=[];Object.keys(S).forEach(function(k){var s=S[k];if(s.sec===p[0]&&s.r.on&&s.r.qty>0){var u=unit(s.e);var pcs=s.r.qty*s.r.per;rows.push('- '+s.e.code+' · '+s.r.qty+' '+(s.e.unitName||'hộp')+(s.r.per>1?' ('+pcs+' cái)':'')+' · '+(u==null?'chưa có giá':vn(u)+'đ/cái')+' · '+(u==null?'—':vn(u*pcs)+'đ')+(s.e.stock===0?' · HẾT HÀNG, ĐẶT TRƯỚC':''))}});
+  var rows=[];Object.keys(S).forEach(function(k){var s=S[k];if(s.sec===p[0]&&s.r.on&&s.r.qty>0){var u=unit(s.e);var pcs=s.r.qty*s.r.per;rows.push('- '+s.e.code+' · '+s.r.qty+' '+(s.e.unitName||'hộp')+(s.r.per>1?' ('+pcs+' cái)':'')+' · '+(u==null?'chưa có giá':vn(u)+'đ/cái')+' · '+(u==null?'—':vn(u*pcs)+'đ')+(s.e.stock===0?' · HỎI LẠI SALES':''))}});
   if(rows.length){L.push(p[1]+' ('+vn(tot[p[0]])+'đ)');L=L.concat(rows);L.push('')}});
  L.push('TỔNG ĐƠN: '+vn(tot.A+tot.B+tot.C)+'đ');return L.join('\n')}
 function openCopy(){
@@ -193,7 +192,7 @@ function openCopy(){
 
 /* ---- gửi đơn: ảnh + chia sẻ + lưu cho Nghĩa + reset ---- */
 function orderLines(){var out=[];[['A','A. Khách đặt'],['B','B. Gợi ý thêm đã chọn'],['C','C. Khách chọn thêm']].forEach(function(p){
- var rs=[];Object.keys(S).forEach(function(k){var s=S[k];if(s.sec===p[0]&&s.r.on&&s.r.qty>0){var u=unit(s.e),pcs=s.r.qty*s.r.per;rs.push({code:s.e.code,name:(s.e.desc||(window.NM&&NM[s.e.code])||'')+(s.e.stock===0?' · HẾT HÀNG, ĐẶT TRƯỚC':''),qty:s.r.qty,un:s.e.unitName||'hộp',pcs:pcs,u:u,amt:u==null?0:u*pcs})}});
+ var rs=[];Object.keys(S).forEach(function(k){var s=S[k];if(s.sec===p[0]&&s.r.on&&s.r.qty>0){var u=unit(s.e),pcs=s.r.qty*s.r.per;rs.push({code:s.e.code,name:(s.e.desc||(window.NM&&NM[s.e.code])||'')+(s.e.stock===0?' · HỎI LẠI SALES':''),qty:s.r.qty,un:s.e.unitName||'hộp',pcs:pcs,u:u,amt:u==null?0:u*pcs})}});
  if(rs.length)out.push({t:p[1],sum:tot[p[0]],rows:rs})});return out}
 function drawOrder(groups,total){
  var W=1000,P=28,RH=64,GH=52,HH=150,FH=110,n=0;groups.forEach(function(g){n+=g.rows.length});
