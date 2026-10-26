@@ -131,9 +131,10 @@ function openQ(i){
  renderQ(ex?ex.qty:1,true)}
 function renderQ(qty,first){
  var i=Q.i,c=CL[i],codes=c[3],inf=info(Q.code);
- var un=inf.kind==='unk'?'cái':'hộp';
+ var un=(inf.kind==='unk'||inf.kind==='one')?'cái':'hộp';
  var rule='';
- if(inf.kind==='box'&&!inf.est)rule='<div class="rule"><span>Quy cách: <b>1 hộp = '+inf.per+' cái</b></span><span>Đặt tối thiểu <b>1 hộp</b>, nhập số hộp.</span></div>';
+ if(inf.kind==='one')rule='<div class="rule"><span>Sản phẩm giá trên 100.000đ.</span><span>Được đặt <b>lẻ từ 1 cái</b>.</span></div>';
+ else if(inf.kind==='box'&&!inf.est)rule='<div class="rule"><span>Quy cách: <b>1 hộp = '+inf.per+' cái</b></span><span>Đặt tối thiểu <b>1 hộp</b>, nhập số hộp.</span></div>';
  else if(inf.kind==='box')rule='<div class="rule w"><span>Quy cách ước tính: <b>1 hộp ≈ '+inf.per+' cái</b></span><span>Nghĩa sẽ xác nhận lại. Đặt tối thiểu 1 hộp.</span></div>';
  else if(inf.kind==='set')rule='<div class="rule"><span>Sản phẩm <b>đóng sẵn nguyên hộp</b>.</span><span>Đặt tối thiểu <b>1 hộp</b>.</span></div>';
  else rule='<div class="rule w"><span>Chưa có quy cách hộp cho mã này.</span><span>Đặt tối thiểu <b>1 cái</b>, Nghĩa sẽ xác nhận lại quy cách.</span></div>';
@@ -169,9 +170,9 @@ document.getElementById('tgo').onclick=function(){document.getElementById('toast
 function addCart(n){
  var i=Q.i,c=CL[i],inf=info(Q.code);
  CART=CART.filter(function(x){return !(x.card===i)});
- CART.push({code:Q.code,card:i,price:c[4],stock:inf.stock,per:inf.per,est:inf.est&&inf.kind==='box',unitName:inf.kind==='unk'?'cái':'hộp',qty:n,desc:inf.kind==='unk'?'':''});
+ CART.push({code:Q.code,card:i,price:c[4],stock:inf.stock,per:inf.per,est:inf.est&&inf.kind==='box',unitName:(inf.kind==='unk'||inf.kind==='one')?'cái':'hộp',qty:n,desc:inf.kind==='unk'?'':''});
  delete ROWS['C:'+Q.code];ROWS['C:'+Q.code]={on:true,qty:n,per:inf.per};
- var code=Q.code,un=inf.kind==='unk'?'cái':'hộp';closeQ();build();recalc();toast('Đã thêm '+code+' · '+n+' '+un)}
+ var code=Q.code,un=(inf.kind==='unk'||inf.kind==='one')?'cái':'hộp';closeQ();build();recalc();toast('Đã thêm '+code+' · '+n+' '+un)}
 /* copy order text */
 function orderText(){
  var L=['ĐƠN HÀNG DELI · giá khách B · '+new Date().toLocaleDateString('vi-VN'),''];
