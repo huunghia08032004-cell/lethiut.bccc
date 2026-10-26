@@ -133,7 +133,7 @@ function renderQ(qty,first){
  var i=Q.i,c=CL[i],codes=c[3],inf=info(Q.code);
  var un=(inf.kind==='unk'||inf.kind==='one')?'cái':'hộp';
  var rule='';
- if(inf.kind==='one')rule='<div class="rule"><span>Sản phẩm giá trên 100.000đ.</span><span>Được đặt <b>lẻ từ 1 cái</b>.</span></div>';
+ if(inf.kind==='one')rule='<div class="rule"><span>Sản phẩm giá cao (từ 40.000đ, quy cách lớn).</span><span>Được đặt <b>lẻ từ 1 cái</b>.</span></div>';
  else if(inf.kind==='box'&&!inf.est)rule='<div class="rule"><span>Quy cách: <b>1 hộp = '+inf.per+' cái</b></span><span>Đặt tối thiểu <b>1 hộp</b>, nhập số hộp.</span></div>';
  else if(inf.kind==='box')rule='<div class="rule w"><span>Quy cách ước tính: <b>1 hộp ≈ '+inf.per+' cái</b></span><span>Nghĩa sẽ xác nhận lại. Đặt tối thiểu 1 hộp.</span></div>';
  else if(inf.kind==='set')rule='<div class="rule"><span>Sản phẩm <b>đóng sẵn nguyên hộp</b>.</span><span>Đặt tối thiểu <b>1 hộp</b>.</span></div>';
