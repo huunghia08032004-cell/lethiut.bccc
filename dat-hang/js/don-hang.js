@@ -50,7 +50,7 @@ function build(){
  if(!CART.length)h+='<div class="empty"><span>Chưa có sản phẩm nào.</span><button class="btn" id="gocat">Xem danh mục sản phẩm</button></div>';
  else{h+='<div class="scroll"><table>'+HEAD+'<tbody>';CART.forEach(function(c){h+=row(cartItem(c),'C',true,'')});h+='</tbody></table></div>'}
  h+='</section>';
- h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Tải file Excel đơn hàng</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Sao chép nội dung đơn</button><button class="btn" id="breset" style="width:100%;min-height:44px;margin-top:8px">Xóa giỏ, làm đơn mới</button></div>';
+ h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Tải file Excel đơn hàng</button><button class="btn" id="bmau" style="width:100%;min-height:48px;margin-top:8px;border-color:#d61e28;color:#d61e28">Tải Excel giỏ hàng mẫu (bản test)</button><button class="btn" id="bimg" style="width:100%;min-height:44px;margin-top:8px">Tải ảnh đơn hàng về máy</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Sao chép nội dung đơn</button><button class="btn" id="breset" style="width:100%;min-height:44px;margin-top:8px">Xóa giỏ, làm đơn mới</button></div>';
  h+='<div class="foot-note"><span>Thành tiền = số lượng × cái/hộp × đơn giá khách B. Sửa số lượng, tích hoặc bỏ tích từng dòng thì tổng đơn tự cập nhật.</span><span>Dấu * là số cái/hộp ước tính vì chưa có quy cách trong file CTKM, cần xác nhận lại. Dòng "Vượt tồn" là số lượng đặt lớn hơn tồn HCM.</span></div>';
  document.getElementById('app').innerHTML=h;
  if(!DATA.own.length&&!DATA.old.length){var sa=document.querySelector('.sA');if(sa)sa.hidden=true}
@@ -85,7 +85,7 @@ app.addEventListener('input',function(ev){var tr=ev.target.closest('tr[data-k]')
 app.addEventListener('click',function(ev){var t=ev.target;
  if(t.id==='gocat'){tab('c');return}
  if(t.id==='bcopy'){openCopy();return}
- if(t.id==='bsend'){downloadExcel();return}
+ if(t.id==='bsend'){downloadExcel();return} if(t.id==='bmau'){downloadExcelMau();return} if(t.id==='bimg'){downloadOrder();return}
  if(t.id==='breset'){if(!t.dataset.s){t.dataset.s=1;t.textContent='Bấm lại để xác nhận xóa giỏ (hãy chắc đã tải ảnh đơn)';setTimeout(function(){delete t.dataset.s;t.textContent='Xóa giỏ, làm đơn mới'},6000);return}resetOrder();toast('Đã xóa giỏ, bắt đầu đơn mới');return}
  var rm=t.closest&&t.closest('[data-rm]');
  if(rm){var code=rm.getAttribute('data-rm');CART=CART.filter(function(c){return c.code!==code});delete ROWS['C:'+code];build();recalc();return}
@@ -275,6 +275,21 @@ function downloadExcel(){
  try{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},1500)}catch(e){}
  if(window.CONFIG&&CONFIG.FORM_URL){fetch(CONFIG.FORM_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subject:'Đơn hàng Deli '+ds+' · '+vn(total)+'đ',message:orderText(),total:total})}).catch(function(){})}
  toast(IN_APP?'Zalo/Facebook không cho tải file. Hãy mở link bằng Chrome/Safari rồi tải lại.':'Đã tải file Excel (mục Tải xuống).')}
+function downloadExcelMau(){
+ var groups=orderLines(),total=tot.A+tot.B+tot.C;
+ if(!groups.length){toast('Chưa chọn sản phẩm nào');return}
+ if(!window.XLSX){toast('Chưa tải được thư viện Excel, hãy tải lại trang');return}
+ var aoa=[['Mã ERP sản phẩm (bắt buộc)','Tên sản phẩm','Mã hàng','Mã đầu 69','Quy cách đóng gói (bắt buộc)','Số lượng đặt hàng (bắt buộc)']],miss=0;
+ groups.forEach(function(g){g.rows.forEach(function(r){
+  var e=(window.ERP&&ERP[r.code])||null,erp=e?(/^\d+$/.test(e[0])?Number(e[0]):e[0]):'';if(!e)miss++;
+  var un=String(r.un||'').toLowerCase(),dv=e?String(e[1]).toLowerCase():'',sl=(dv&&dv===un)?r.qty:r.pcs;
+  aoa.push([erp,(e&&e[3])||r.name.replace(' · HỎI LẠI SALES',''),r.code,e&&e[4]?e[4]:'',(e&&e[2])||('1/'+Math.round(r.pcs/r.qty)),sl])})});
+ var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:30},{wch:60},{wch:20},{wch:16},{wch:28},{wch:26}];
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'sheet1');
+ var fname='gio-hang-mau-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.xlsx';
+ var out=XLSX.write(wb,{bookType:'xlsx',type:'array'}),blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ try{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},1500)}catch(e){}
+ toast(IN_APP?'Zalo/Facebook không cho tải file. Hãy mở link bằng Chrome/Safari rồi tải lại.':'Đã tải giỏ hàng mẫu'+(miss?' · '+miss+' mã chưa có mã ERP (để trống)':'')+'.')}
 function downloadOrder(){
  var groups=orderLines(),total=tot.A+tot.B+tot.C;
  if(!groups.length){toast('Chưa chọn sản phẩm nào');return}
