@@ -50,7 +50,7 @@ function build(){
  if(!CART.length)h+='<div class="empty"><span>Chưa có sản phẩm nào.</span><button class="btn" id="gocat">Xem danh mục sản phẩm</button></div>';
  else{h+='<div class="scroll"><table>'+HEAD+'<tbody>';CART.forEach(function(c){h+=row(cartItem(c),'C',true,'')});h+='</tbody></table></div>'}
  h+='</section>';
- h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Tải ảnh đơn hàng về máy</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Sao chép nội dung đơn</button><button class="btn" id="breset" style="width:100%;min-height:44px;margin-top:8px">Xóa giỏ, làm đơn mới</button></div>';
+ h+='<div class="sumbox" id="sumbox"></div><div style="margin-top:12px"><button class="btn pri" id="bsend" style="width:100%;min-height:52px;font-size:1.05rem">Tải file Excel đơn hàng</button><button class="btn" id="bcopy" style="width:100%;min-height:44px;margin-top:8px">Sao chép nội dung đơn</button><button class="btn" id="breset" style="width:100%;min-height:44px;margin-top:8px">Xóa giỏ, làm đơn mới</button></div>';
  h+='<div class="foot-note"><span>Thành tiền = số lượng × cái/hộp × đơn giá khách B. Sửa số lượng, tích hoặc bỏ tích từng dòng thì tổng đơn tự cập nhật.</span><span>Dấu * là số cái/hộp ước tính vì chưa có quy cách trong file CTKM, cần xác nhận lại. Dòng "Vượt tồn" là số lượng đặt lớn hơn tồn HCM.</span></div>';
  document.getElementById('app').innerHTML=h;
  if(!DATA.own.length&&!DATA.old.length){var sa=document.querySelector('.sA');if(sa)sa.hidden=true}
@@ -85,7 +85,7 @@ app.addEventListener('input',function(ev){var tr=ev.target.closest('tr[data-k]')
 app.addEventListener('click',function(ev){var t=ev.target;
  if(t.id==='gocat'){tab('c');return}
  if(t.id==='bcopy'){openCopy();return}
- if(t.id==='bsend'){downloadOrder();return}
+ if(t.id==='bsend'){downloadExcel();return}
  if(t.id==='breset'){if(!t.dataset.s){t.dataset.s=1;t.textContent='Bấm lại để xác nhận xóa giỏ (hãy chắc đã tải ảnh đơn)';setTimeout(function(){delete t.dataset.s;t.textContent='Xóa giỏ, làm đơn mới'},6000);return}resetOrder();toast('Đã xóa giỏ, bắt đầu đơn mới');return}
  var rm=t.closest&&t.closest('[data-rm]');
  if(rm){var code=rm.getAttribute('data-rm');CART=CART.filter(function(c){return c.code!==code});delete ROWS['C:'+code];build();recalc();return}
@@ -251,11 +251,30 @@ function copyLink(){var u=location.href,ok=false;try{var ta=document.createEleme
  if(!ok&&navigator.clipboard)navigator.clipboard.writeText(u);toast('Đã sao chép link. Dán vào Chrome/Safari để mở.')}
 function inAppBanner(){if(!IN_APP||document.getElementById('inappb'))return;var d=document.createElement('div');d.id='inappb';
  d.style.cssText='background:#fff3cd;color:#5c4400;border-bottom:1px solid #f0d98a;padding:10px 14px;font:500 14px/1.45 system-ui,sans-serif';
- d.innerHTML='Bạn đang mở trong ứng dụng (Zalo/Facebook) nên có thể <b>không tải được ảnh</b>. Hãy mở bằng trình duyệt: bấm dấu <b>⋯</b> góc phải → <b>“Mở bằng trình duyệt”</b>. <button id="inappo" style="margin-top:6px;background:#d61e28;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:700">'+(IS_AND?'Mở bằng Chrome':'Sao chép link')+'</button> <button id="inappc" style="margin-top:6px;background:#fff;border:1px solid #d6b84a;border-radius:8px;padding:8px 12px;font-weight:700">Sao chép link</button>';
+ d.innerHTML='Bạn đang mở trong ứng dụng (Zalo/Facebook) nên có thể <b>không tải được file</b>. Hãy mở bằng trình duyệt: bấm dấu <b>⋯</b> góc phải → <b>“Mở bằng trình duyệt”</b>. <button id="inappo" style="margin-top:6px;background:#d61e28;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:700">'+(IS_AND?'Mở bằng Chrome':'Sao chép link')+'</button> <button id="inappc" style="margin-top:6px;background:#fff;border:1px solid #d6b84a;border-radius:8px;padding:8px 12px;font-weight:700">Sao chép link</button>';
  document.body.insertBefore(d,document.body.firstChild);document.getElementById('inappo').onclick=openExternal;document.getElementById('inappc').onclick=copyLink}
 inAppBanner();
 
 function dataToBlob(u){var p=u.split(','),m=/:(.*?);/.exec(p[0])[1],bin=atob(p[1]),n=bin.length,a=new Uint8Array(n);while(n--)a[n]=bin.charCodeAt(n);return new Blob([a],{type:m})}
+function downloadExcel(){
+ var groups=orderLines(),total=tot.A+tot.B+tot.C;
+ if(!groups.length){toast('Chưa chọn sản phẩm nào');return}
+ if(!window.XLSX){toast('Chưa tải được thư viện Excel, hãy tải lại trang');return}
+ var d=new Date(),ds=d.toLocaleDateString('vi-VN'),aoa=[['ĐƠN HÀNG DELI · '+ds],['Giá khách B (đã gồm VAT)'],[],['STT','Mã SP','Tên sản phẩm','Số lượng','ĐVT','Số cái','Đơn giá (đ/cái)','Thành tiền (đ)','Ghi chú']],n=0;
+ groups.forEach(function(g){aoa.push([g.t]);g.rows.forEach(function(r){n++;var ask=/HỎI LẠI SALES/.test(r.name);
+  aoa.push([n,r.code,r.name.replace(' · HỎI LẠI SALES',''),r.qty,r.un,r.pcs,r.u==null?'':Math.round(r.u),r.u==null?'':Math.round(r.amt),ask?'HỎI LẠI SALES':(r.u==null?'Chưa có giá':'')])});
+  aoa.push(['','','Cộng '+g.t.split('.')[0],'','','','',Math.round(g.sum),''])});
+ aoa.push([]);aoa.push(['','','TỔNG CỘNG','','','','',Math.round(total),'']);
+ var ws=XLSX.utils.aoa_to_sheet(aoa);
+ ws['!cols']=[{wch:5},{wch:16},{wch:48},{wch:10},{wch:8},{wch:9},{wch:15},{wch:15},{wch:18}];
+ ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:8}},{s:{r:1,c:0},e:{r:1,c:8}}];
+ for(var R=4;R<aoa.length;R++)[6,7].forEach(function(c){var a=XLSX.utils.encode_cell({r:R,c:c});if(ws[a]&&typeof ws[a].v==='number')ws[a].z='#,##0'});
+ var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Đơn hàng');
+ var fname='don-hang-'+d.toISOString().slice(0,16).replace(/[:T]/g,'-')+'.xlsx';
+ var out=XLSX.write(wb,{bookType:'xlsx',type:'array'}),blob=new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ try{var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},1500)}catch(e){}
+ if(window.CONFIG&&CONFIG.FORM_URL){fetch(CONFIG.FORM_URL,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({subject:'Đơn hàng Deli '+ds+' · '+vn(total)+'đ',message:orderText(),total:total})}).catch(function(){})}
+ toast(IN_APP?'Zalo/Facebook không cho tải file. Hãy mở link bằng Chrome/Safari rồi tải lại.':'Đã tải file Excel (mục Tải xuống).')}
 function downloadOrder(){
  var groups=orderLines(),total=tot.A+tot.B+tot.C;
  if(!groups.length){toast('Chưa chọn sản phẩm nào');return}
