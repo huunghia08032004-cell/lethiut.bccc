@@ -19,12 +19,12 @@ if(S.ci>=0)sc=Math.min(r.width*.98/cw,r.height*.98/ch);else sc=r.width/cw;
 cv._w=cw*sc;cv._h=ch*sc;cv.style.width=cv._w+'px';cv.style.height=cv._h+'px';cv.style.borderRadius=S.ci>=0?'14px':'0';
 v.s=1;v.x=0;v.y=0;v._top=0;if(S.ci<0&&cv._h>r.height){v._top=(cv._h-r.height)/2;v.y=v._top}apply()}
 async function show(){var my=++tok,u=S.pages[S.pi];ld.style.display='flex';var im;try{im=await load(u)}catch(e){ld.style.display='none';return}if(my!==tok)return;
-var list=slots(im),c=S.ci>=0?list[S.ci]:null,g=cv.getContext('2d');
+var list=slots(im),c=S.ci>=0?list[S.ci]:null,g=cv.getContext('2d');window.__lbCur=c?{p:pnum(u),x:c.x,y:c.y}:null;if(window.lbInfo)window.lbInfo(window.__lbCur);
 if(c){cv.width=992;cv.height=1222;g.clearRect(0,0,992,1222);g.save();g.beginPath();if(g.roundRect)g.roundRect(0,0,992,1222,44);else g.rect(0,0,992,1222);g.clip();g.imageSmoothingQuality='high';g.drawImage(im,c.x,c.y,496,611,0,0,992,1222);g.restore()}
 else{cv.width=im.naturalWidth;cv.height=im.naturalHeight;g.drawImage(im,0,0)}
 ld.style.display='none';fit();
 var lab=label(im,u,c);ttl.textContent=c?lab:'Cả trang · trang '+pnum(u);
-var ab=$('lbadd');if(ab)ab.hidden=!c;window.__lbCur=c?{p:pnum(u),x:c.x,y:c.y}:null;tg.textContent=c?'Cả trang':'Sản phẩm';tg.hidden=false;pv.hidden=nx.hidden=S.single;tg.dataset.have=list.length?1:0}
+var ab=$('lbadd');if(ab)ab.hidden=!c;tg.textContent=c?'Cả trang':'Sản phẩm';tg.hidden=false;pv.hidden=nx.hidden=S.single;tg.dataset.have=list.length?1:0}
 function open(pages,pi,ci,single){S.pages=pages;S.pi=pi;S.ci=ci;S.single=single;if(!isOpen){isOpen=true;lb.classList.add('on');lb.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';try{history.pushState({lb:1},'')}catch(e){}$('lbx').focus()}show()}
 function hide(){if(!isOpen)return;isOpen=false;tok++;lb.classList.remove('on');lb.setAttribute('aria-hidden','true');document.documentElement.style.overflow=''}
 function close(){if(!isOpen)return;if(history.state&&history.state.lb){try{history.back();return}catch(e){}}hide()}
