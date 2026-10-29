@@ -4,7 +4,7 @@ var lb=document.getElementById('lb');if(!lb)return;
 var box=document.createElement('aside');box.id='lbinfo';box.setAttribute('aria-label','Thông tin sản phẩm');lb.appendChild(box);
 var TTP=null;
 function loadTT(){if(window.TT)return Promise.resolve(window.TT);if(TTP)return TTP;
- TTP=new Promise(function(res){var s=document.createElement('script');s.src='js/du-lieu-thong-tin.js?v=1';s.onload=function(){res(window.TT||{})};s.onerror=function(){res({})};document.head.appendChild(s)});return TTP}
+ TTP=new Promise(function(res){var s=document.createElement('script');s.src='js/du-lieu-thong-tin.js?v=2';s.onload=function(){res(window.TT||{})};s.onerror=function(){res({})};document.head.appendChild(s)});return TTP}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function vn(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.')}
 function cardAt(p,x,y){var CL=CD.CL;for(var i=0;i<CL.length;i++){var c=CL[i];if(c[0]===p&&c[1]===x&&c[2]===y)return i}return -1}
