@@ -11,4 +11,4 @@ Trang tĩnh, mở được trực tiếp trên GitHub Pages tại `/dat-hang/`.
 - `js/cau-hinh.js` – cấu hình; điền `FORM_URL` (ví dụ Formspree) để đơn tự gửi về email
 - `img/` – ảnh trang danh mục (001–501) và ảnh sản phẩm
 
-Giá khách B = niêm yết − 4% − KM tháng. Cập nhật dữ liệu hằng tháng: sửa `du-lieu-*.js`.
+Giá khách B = niêm yết − 4% − KM tháng (hiện T11/2026, CTKM KD1126-02MN). Cập nhật dữ liệu hằng tháng: sửa `du-lieu-*.js`.
